@@ -114,7 +114,9 @@ struct cursor
          * skip_initial_length).
          */
         std::shared_ptr<section> subsection();
+		void skip_bytes(uint32_t how_many); // useful to parse loclists
         std::int64_t sleb128();
+        std::int64_t sleb128(unsigned int &read);
         section_offset offset();
         void string(std::string &out);
         const char *cstr(size_t *size_out = nullptr);
@@ -148,11 +150,20 @@ struct cursor
         {
                 // Appendix C
                 // XXX Pre-compute all two byte ULEB's
-                std::uint64_t result = 0;
+            	unsigned int tmp = 0;    
+				return uleb128(tmp);
+        }
+        
+		std::uint64_t uleb128(unsigned int &read)
+        {
+                // Appendix C
+                // XXX Pre-compute all two byte ULEB's
+				std::uint64_t result = 0;
                 int shift = 0;
                 while (pos < sec->end) {
                         uint8_t byte = *(uint8_t*)(pos++);
-                        result |= (uint64_t)(byte & 0x7f) << shift;
+                        read++;
+						result |= (uint64_t)(byte & 0x7f) << shift;
                         if ((byte & 0x80) == 0)
                                 return result;
                         shift += 7;

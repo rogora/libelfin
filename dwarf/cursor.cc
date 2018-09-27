@@ -11,15 +11,28 @@ using namespace std;
 
 DWARFPP_BEGIN_NAMESPACE
 
+void cursor::skip_bytes(uint32_t how_many) {
+	pos += how_many;
+}
+
 int64_t
 cursor::sleb128()
+{
+        // Appendix C
+        unsigned int tmp = 0;
+		return sleb128(tmp);
+}
+
+int64_t
+cursor::sleb128(unsigned int &read)
 {
         // Appendix C
         uint64_t result = 0;
         unsigned shift = 0;
         while (pos < sec->end) {
                 uint8_t byte = *(uint8_t*)(pos++);
-                result |= (uint64_t)(byte & 0x7f) << shift;
+                read++;
+				result |= (uint64_t)(byte & 0x7f) << shift;
                 shift += 7;
                 if ((byte & 0x80) == 0) {
                         if (shift < sizeof(result)*8 && (byte & 0x40))
